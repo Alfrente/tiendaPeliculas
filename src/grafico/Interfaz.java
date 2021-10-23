@@ -6,6 +6,8 @@ import java.awt.SystemColor;
 import java.awt.TextArea;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -31,70 +33,158 @@ public class Interfaz extends JFrame {
 	private JTextField entradaCantidad;
 	private int incremento = 1;
 	private String tienda;
-	
-	private void nombreTienda(String tienda){
-		if(tienda.isEmpty()){
-			this.tienda = "TIENDA DE PELICULAS";
-		}else{
-			this.tienda = tienda;
-		}	
+	private final JComboBox<String> comboBoxPelicula = new JComboBox<String>();
+	private String cantidadDatos = "";
+	private int catidaDatos = 0;
+	private boolean abrirInterface;
+	private int salir = 0;
+	private int salirPrograma = 0;
+	private StringBuffer guararPeliculas = new StringBuffer();
+	private TextArea textAreaPeliDispo = new TextArea(); 
+
+	// private String[] peliculas = new String[20];
+
+	private String getDatosTienda() {
+		StringBuffer datos = new StringBuffer();
+		List<String> lista = logicaTienda.cargatTxt(true);
+		if (!(lista.isEmpty())) {
+			for (String s : lista) {
+				datos = datos.append(s);
+			}
+		}
+		return datos.toString();
 	}
 	
-	@SuppressWarnings("rawtypes")
+	private String getDatosGuardaos() {
+		StringBuffer datos = new StringBuffer();
+		List<String> lista = logicaTienda.cargatTxt(false);
+		if (!(lista.isEmpty())) {
+			for (String s : lista) {
+				datos = datos.append(s);
+			}
+		}
+		return datos.toString();
+	}
+
+
+	private void nombreTienda(String tienda) {
+		if (tienda == null) {
+			JOptionPane.showMessageDialog(null, "Canselo el ingreso del nombre de la tienda el programa se cerro");
+			System.exit(0);
+		}else if( tienda.isEmpty()) {
+			this.tienda = "TIENDA DE PELICULAS";
+			JOptionPane.showMessageDialog(null, "Se le asigno el nombre de " + this.tienda);
+		} else {
+			this.tienda = tienda;
+		}
+	}
+
 	public Interfaz() {
 
-		nombreTienda(JOptionPane.showInputDialog("Ingrese el nombre de la tienda"));
+		nombreTienda(JOptionPane.showInputDialog("Ingrese el nombre de la tienda o dele en aceptar para que el programa lo haga"));
+
+		logicaTienda.ubicacionArchivo(JOptionPane.showInputDialog("Ingrese la ubicación donde desea guardar la información\n                           EJ: C:\\Txt\\parcial.txt \no dele en aceptar para guardarlo automaticamente"));
+		comboBoxPelicula.addItem("");
+
+		do {
+			cantidadDatos = JOptionPane
+					.showInputDialog("Ingrese el numero de la cantidad de peliculas que va a ingresar");
+
+			if (cantidadDatos == null) {
+				++salirPrograma;
+				cantidadDatos = "";
+				if (salirPrograma == 2) {
+					System.exit(0);
+				}
+				JOptionPane.showMessageDialog(null,
+						"Dele de nuevo en cancelar para salir");
+
+			} else if (cantidadDatos.isEmpty()) {
+				JOptionPane.showMessageDialog(null,
+						"Error falta la cantidad de pelicula que va a añadiir");
+			} else {
+				catidaDatos = logicaTienda.setCantidaPelicula(cantidadDatos);
+				catidaDatos = catidaDatos - 1;
+				int l = -1;
+				if (catidaDatos >= 1) {
+					for (int i = 0; i < catidaDatos; i++) {
+						do {
+							String pelicula = logicaTienda.setPelicula();
+							guararPeliculas.append(pelicula + ",\t");
+							
+							if (pelicula != null && !(pelicula.isEmpty())) {
+								comboBoxPelicula.addItem(pelicula);
+								l = 0;
+							} else if (pelicula == null) {
+								++salir;
+								if (salir == 2) {
+									JOptionPane
+											.showMessageDialog(null,
+													"El programa se cerro por que le dio en cancelar 2 veces");
+									System.exit(0);
+								}
+							} else if (pelicula.isEmpty()) {
+								l = -1;
+								JOptionPane
+										.showMessageDialog(null,
+												"Error el nombre de la pelicula esta vacio");
+
+							}
+						} while (l != 0);
+					}
+				}
+			}
+			abrirInterface = logicaTienda.validarNumero(cantidadDatos);
+
+			if (abrirInterface == true && !cantidadDatos.isEmpty()) {
+				abrirInterface = true;
+			} else if (abrirInterface == false && cantidadDatos.isEmpty()) {
+				abrirInterface = false;
+			}
+
+		} while (abrirInterface != true);
 		
-		logicaTienda.ubicacionArchivo(JOptionPane.showInputDialog("Ingrese la ubicación don desea guardar la información\nEJ: C:\\Txt\\parcial.txt \no dele en aceptar para guardarlo en el disco C"));
+		logicaTienda.guardarTxt(" Peliculas disponibles: " + guararPeliculas.toString(),true, false);
 		
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		String datosTemporal =  getDatosTienda();
+		textAreaPeliDispo.setText(datosTemporal);
+		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		setBounds(100, 100, 653, 628);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
+
+		JEditorPane editorPane = new JEditorPane();
+		editorPane.setBackground(new Color(65, 105, 225));
+		editorPane.setEditable(false);
+		editorPane.setBounds(-26, 549, 62, 61);
+		contentPane.add(editorPane);
+
 		
-		JLabel lblH_2 = new JLabel("1 h 30 min");
-		lblH_2.setFont(new Font("Tahoma", Font.BOLD, 11));
-		lblH_2.setHorizontalAlignment(SwingConstants.CENTER);
-		lblH_2.setBounds(362, 240, 90, 14);
-		contentPane.add(lblH_2);
-		
-		JLabel lblBuscandoANemo_1_1_1_1_1 = new JLabel("1 h 54 min");
-		lblBuscandoANemo_1_1_1_1_1.setFont(new Font("Tahoma", Font.BOLD, 11));
-		lblBuscandoANemo_1_1_1_1_1.setHorizontalAlignment(SwingConstants.CENTER);
-		lblBuscandoANemo_1_1_1_1_1.setBounds(362, 265, 90, 14);
-		contentPane.add(lblBuscandoANemo_1_1_1_1_1);
-		
-		JLabel lblH_1_1 = new JLabel("2 h 00 min");
-		lblH_1_1.setFont(new Font("Tahoma", Font.BOLD, 11));
-		lblH_1_1.setHorizontalAlignment(SwingConstants.CENTER);
-		lblH_1_1.setBounds(372, 215, 69, 14);
-		contentPane.add(lblH_1_1);
-		
-		JLabel lblBuscandoANemo = new JLabel("Buscando a Nemo");
-		lblBuscandoANemo.setFont(new Font("Tahoma", Font.BOLD, 11));
-		lblBuscandoANemo.setHorizontalAlignment(SwingConstants.CENTER);
-		lblBuscandoANemo.setBounds(137, 216, 114, 14);
-		contentPane.add(lblBuscandoANemo);
-		
-		JLabel lblCiudadDeDios = new JLabel("Ciudad de Dios");
-		lblCiudadDeDios.setFont(new Font("Tahoma", Font.BOLD, 11));
-		lblCiudadDeDios.setHorizontalAlignment(SwingConstants.CENTER);
-		lblCiudadDeDios.setBounds(137, 241, 114, 14);
-		contentPane.add(lblCiudadDeDios);
-		
+		textAreaPeliDispo.setBackground(new Color(240, 248, 255));
+		textAreaPeliDispo.setEditable(false);
+		textAreaPeliDispo.setBounds(43, 168, 560, 133);
+		contentPane.add(textAreaPeliDispo);
+
 		final TextArea textArea = new TextArea();
+		textArea.setBackground(new Color(240, 248, 255));
+		textArea.setEditable(false);
 		textArea.setBounds(61, 357, 526, 133);
 		contentPane.add(textArea);
-		
-		JLabel lblBuscandoANemo_1_1 = new JLabel("Hable con ella");
-		lblBuscandoANemo_1_1.setFont(new Font("Tahoma", Font.BOLD, 11));
-		lblBuscandoANemo_1_1.setHorizontalAlignment(SwingConstants.CENTER);
-		lblBuscandoANemo_1_1.setBounds(137, 266, 114, 14);
-		contentPane.add(lblBuscandoANemo_1_1);
+
+		JButton btnProbarSalida = new JButton("probar salida");
+		btnProbarSalida.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				// textAreaPeliDispo
+
+			}
+		});
+		btnProbarSalida.setBounds(81, 503, 89, 23);
+		contentPane.add(btnProbarSalida);
 
 		entradaCantidad = new JTextField();
+		entradaCantidad.setBackground(new Color(255, 250, 250));
 		entradaCantidad.setBounds(360, 100, 113, 20);
 		contentPane.add(entradaCantidad);
 		entradaCantidad.setColumns(10);
@@ -129,14 +219,14 @@ public class Interfaz extends JFrame {
 		lblPrecio.setHorizontalAlignment(SwingConstants.CENTER);
 		lblPrecio.setForeground(new Color(65, 105, 225));
 		lblPrecio.setFont(new Font("Tahoma", Font.BOLD, 12));
-		lblPrecio.setBounds(362, 184, 90, 20);
+		lblPrecio.setBounds(438, 145, 90, 20);
 		contentPane.add(lblPrecio);
 
 		JLabel lblClasificacin = new JLabel("CLASIFICACI\u00D3N");
 		lblClasificacin.setHorizontalAlignment(SwingConstants.CENTER);
 		lblClasificacin.setForeground(new Color(65, 105, 225));
 		lblClasificacin.setFont(new Font("Tahoma", Font.BOLD, 12));
-		lblClasificacin.setBounds(127, 184, 124, 20);
+		lblClasificacin.setBounds(61, 145, 124, 20);
 		contentPane.add(lblClasificacin);
 
 		JLabel lblInformacin = new JLabel("INFORMACI\u00D3N");
@@ -151,18 +241,16 @@ public class Interfaz extends JFrame {
 		linea1.setBackground(new Color(192, 192, 192));
 		linea1.setBounds(43, 133, 560, 1);
 		contentPane.add(linea1);
-		
-		@SuppressWarnings("unchecked")
-		final JComboBox<String> comboBoxPelicula = new JComboBox();
+
+		// final JComboBox<String> comboBoxPelicula = new JComboBox();
 		comboBoxPelicula.setBounds(61, 100, 124, 20);
-		comboBoxPelicula.addItem("");
-		comboBoxPelicula.addItem("Buscando a Nemo");
-		comboBoxPelicula.addItem("Ciudad de Dios");
-		comboBoxPelicula.addItem("Hable con ella");
+		// comboBoxPelicula.addItem("");
+		// comboBoxPelicula.addItem("Buscando a Nemo");
+		// comboBoxPelicula.addItem("Ciudad de Dios");
+		// comboBoxPelicula.addItem("Hable con ella");
 		contentPane.add(comboBoxPelicula);
 
-		@SuppressWarnings("unchecked")
-		final JComboBox<String> comboBoxHorario = new JComboBox();
+		final JComboBox<String> comboBoxHorario = new JComboBox<String>();
 		comboBoxHorario.setBounds(209, 100, 124, 20);
 		comboBoxHorario.addItem("");
 		comboBoxHorario.addItem("Mañana");
@@ -173,33 +261,55 @@ public class Interfaz extends JFrame {
 		JButton btnAgregar = new JButton("AGREGAR");
 		btnAgregar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				boolean valido = logicaTienda.validarNumero(entradaCantidad.getText());
+				boolean guadarFecha = true;
+				if(guadarFecha){
+					guadarFecha = false;
+					DateTimeFormatter formato = DateTimeFormatter.ofPattern("yyyy/MMMM/dd hh:mm:ss") ;
+					String fecha = "\n\nFecha: " + formato.format(LocalDateTime.now()) + "\n";
+					logicaTienda.guardarTxt(fecha,false, true);
+				}
+				
+				boolean valido = logicaTienda.validarNumero(entradaCantidad
+						.getText());
 				if (valido) {
 					int indexPelicula = comboBoxPelicula.getSelectedIndex();
-					String pelicula = logicaTienda.getPelicula(indexPelicula);
-					int indexHorario = comboBoxHorario.getSelectedIndex();	
+
+					// String pelicula =
+					// logicaTienda.getPelicula(indexPelicula);
+
+					String nombrePeli = logicaTienda
+							.getPelicula2(indexPelicula);
+					int precio = logicaTienda
+							.calcularAsignarPrecio(nombrePeli);
+					int precioTotal = precio
+							* Integer.parseInt(entradaCantidad.getText());
+					int indexHorario = comboBoxHorario.getSelectedIndex();
 					String horario = logicaTienda.getHorario(indexHorario);
-					if((indexPelicula>=1 && indexPelicula<=4) && (indexHorario>=1 && indexHorario<=4)){
-						logicaTienda.guardarTxt("#" + incremento + ":) Pelicula: " + pelicula + ", Horario: " + horario.toString() + ", Cantidad de boletos: " + entradaCantidad.getText() + "\n");
-						JOptionPane.showMessageDialog(null, "Guardando información");
+
+					if ((indexPelicula >= 1 && indexPelicula <= 4)
+							&& (indexHorario >= 1 && indexHorario <= 4)) {
+						logicaTienda.guardarTxt("#" + incremento
+								+ ":) Pelicula: " + nombrePeli + ", Horario: "
+								+ horario.toString()
+								+ ", Cantidad de boletos: "
+								+ entradaCantidad.getText()
+								+ ", precio unidad: " + precio
+								+ ", precio total: " + precioTotal + "\n", false, true);
+						JOptionPane.showMessageDialog(null,
+								"Información guardada ");
 						incremento++;
 					}
-					StringBuffer datos = new StringBuffer();
-					List<String> lista = logicaTienda.cargatTxt();
-					if(!(lista.isEmpty())){
-						for(String s: lista){
-							datos=datos.append(s);
-						}
-					}
-					textArea.setText(datos.toString());
-				}else{
-					JOptionPane.showMessageDialog(null, "Cantidad inavlida intente nuevamente");
+					textArea.setText(getDatosGuardaos());
+				} else {
+					JOptionPane.showMessageDialog(null,
+							"Cantidad invalida intente nuevamente");
 				}
+
 			}
 		});
 		btnAgregar.setForeground(Color.WHITE);
 		btnAgregar.setFont(new Font("Tahoma", Font.BOLD, 11));
-		btnAgregar.setBackground(new Color(123, 104, 238));
+		btnAgregar.setBackground(new Color(135, 206, 250));
 		btnAgregar.setBounds(490, 99, 90, 20);
 		contentPane.add(btnAgregar);
 
@@ -212,7 +322,7 @@ public class Interfaz extends JFrame {
 
 		JEditorPane fondoBlanco_1 = new JEditorPane();
 		fondoBlanco_1.setEditable(false);
-		fondoBlanco_1.setBackground(new Color(65, 105, 225));
+		fondoBlanco_1.setBackground(new Color(135, 206, 250));
 		fondoBlanco_1.setBounds(356, 99, 120, 22);
 		contentPane.add(fondoBlanco_1);
 
@@ -233,15 +343,15 @@ public class Interfaz extends JFrame {
 		JButton btnConfirmar = new JButton("SALIR");
 		btnConfirmar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				logicaTienda.abrirarchivo();	
-				System.exit(0);			
+				logicaTienda.abrirarchivo();
+				System.exit(0);
 			}
 		});
-		btnConfirmar.setForeground(Color.WHITE);
+		btnConfirmar.setForeground(new Color(255, 255, 255));
 		btnConfirmar.setFont(new Font("Tahoma", Font.BOLD, 11));
-		btnConfirmar.setBounds(268, 503, 113, 23);
+		btnConfirmar.setBounds(257, 503, 113, 23);
 		contentPane.add(btnConfirmar);
-		btnConfirmar.setBackground(new Color(123, 104, 238));
+		btnConfirmar.setBackground(new Color(135, 206, 250));
 
 		JEditorPane linea4 = new JEditorPane();
 		linea4.setEditable(false);
@@ -257,7 +367,7 @@ public class Interfaz extends JFrame {
 
 		JEditorPane fondoGrisOscuro = new JEditorPane();
 		fondoGrisOscuro.setEditable(false);
-		fondoGrisOscuro.setBackground(SystemColor.controlShadow);
+		fondoGrisOscuro.setBackground(new Color(100, 149, 237));
 		fondoGrisOscuro.setBounds(57, 352, 530, 143);
 		contentPane.add(fondoGrisOscuro);
 
@@ -273,10 +383,10 @@ public class Interfaz extends JFrame {
 		fondoBlanco.setEditable(false);
 		fondoBlanco.setBackground(new Color(255, 255, 255));
 
-		JEditorPane fondoMorado = new JEditorPane();
-		fondoMorado.setEditable(false);
-		fondoMorado.setBackground(new Color(255, 255, 255));
-		fondoMorado.setBounds(-18, -37, 693, 639);
-		contentPane.add(fondoMorado);
+		JEditorPane fondoAzul = new JEditorPane();
+		fondoAzul.setEditable(false);
+		fondoAzul.setBackground(new Color(135, 206, 250));
+		fondoAzul.setBounds(-18, -37, 693, 639);
+		contentPane.add(fondoAzul);
 	}
 }
